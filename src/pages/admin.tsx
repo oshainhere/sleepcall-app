@@ -29,8 +29,12 @@ export default function Admin() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        if (response.ok) alert('Data berhasil diupdate!');
-        else alert('Gagal update data.');
+        const result = await response.json();
+        if (response.ok) {
+            alert('Data berhasil diupdate!');
+        } else {
+            alert('Gagal update: ' + (result.error || 'Terjadi kesalahan'));
+        }
     } catch (err) {
         alert('Gagal update: ' + err);
     }
