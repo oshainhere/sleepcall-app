@@ -50,6 +50,14 @@ export default function Home() {
           <p className="text-sm text-gray-400 font-medium">{profil.bio || "Bio"}</p>
         </div>
 
+        {/* Voice Review */}
+        {profil.voice_url && (
+          <div className="bg-white/[0.03] p-4 rounded-2xl mb-8 border border-white/5">
+            <p className="text-xs text-gray-500 font-bold uppercase tracking-wider mb-2">Voice Review</p>
+            <audio src={profil.voice_url} controls className="w-full h-10" />
+          </div>
+        )}
+
         {/* Payment Box */}
         <div className="bg-white/[0.03] p-6 rounded-2xl mb-6 border border-white/5">
             <div className="flex justify-between items-center mb-3">

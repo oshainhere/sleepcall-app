@@ -1,10 +1,16 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+);
 
 export default function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
-  const [data, setData] = useState({ nama: '', bio: '', wa: '', gopay: '', foto: '', background_url: '' });
+  const [data, setData] = useState({ nama: '', bio: '', wa: '', gopay: '', foto: '', background_url: '', voice_url: '' });
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -41,10 +47,22 @@ export default function Admin() {
     setLoading(false);
   }
 
-  async function uploadFoto(e: any) {
-    // Foto tetap menggunakan Supabase Storage langsung, karena Storage API 
-    // biasanya tidak bermasalah dengan Edge Runtime seperti Database API.
-    alert('Fungsi upload foto perlu disesuaikan dengan API route jika masih error.');
+  async function uploadFile(e: any, type: 'foto' | 'voice') {
+    const file = e.target.files[0];
+    if (!file) return;
+    setLoading(true);
+    const bucket = type === 'foto' ? 'foto-profil' : 'voice-review';
+    const fileName = `${type}.${file.name.split('.').pop()}`;
+    const { error } = await supabase.storage.from(bucket).upload(fileName, file, { upsert: true });
+    
+    if (!error) {
+      const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(fileName);
+      setData({...data, [type === 'foto' ? 'foto' : 'voice_url']: urlData.publicUrl});
+      alert(type === 'foto' ? 'Foto diunggah!' : 'Audio diunggah!');
+    } else {
+        alert('Gagal upload: ' + error.message);
+    }
+    setLoading(false);
   }
 
   if (!isAuthenticated) {
@@ -74,7 +92,11 @@ export default function Admin() {
         <div className="space-y-5">
           <div className="space-y-1">
             <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Foto Profil</label>
-            <input type="file" onChange={uploadFoto} className="w-full p-2 bg-gray-800 rounded-lg border border-gray-700 text-sm file:bg-gray-700 file:border-0 file:text-white file:px-3 file:py-1.5 file:rounded-md cursor-pointer" />
+            <input type="file" onChange={(e) => uploadFile(e, 'foto')} className="w-full p-2 bg-gray-800 rounded-lg border border-gray-700 text-sm file:bg-gray-700 file:border-0 file:text-white file:px-3 file:py-1.5 file:rounded-md cursor-pointer" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Voice Review (Audio)</label>
+            <input type="file" accept="audio/*" onChange={(e) => uploadFile(e, 'voice')} className="w-full p-2 bg-gray-800 rounded-lg border border-gray-700 text-sm file:bg-gray-700 file:border-0 file:text-white file:px-3 file:py-1.5 file:rounded-md cursor-pointer" />
           </div>
           <div className="space-y-1">
             <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">Nama</label>
