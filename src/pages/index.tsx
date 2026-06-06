@@ -1,78 +1,102 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
+import { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
+import { motion } from 'framer-motion';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+);
 
 export default function Home() {
+  const [profil, setProfil] = useState({ nama: '', bio: '', wa: '', gopay: '', foto: '', background_url: '' });
+  const [paket, setPaket] = useState('');
+
+  useEffect(() => {
+    async function loadProfil() {
+      const { data, error } = await supabase.from('profil').select('*').eq('id', 1).single();
+      if (data) setProfil(data);
+      if (error) console.error("Error loading profile:", error);
+    }
+    loadProfil();
+  }, []);
+
+  const handleOrder = () => {
+    if (!paket) return alert("Pilih paket terlebih dahulu!");
+    const text = `Halo, saya ingin pesan ${paket}. Saya sudah melakukan transfer ke GoPay Anda. Mohon konfirmasinya.`;
+    window.open(`https://wa.me/${profil.wa}?text=${encodeURIComponent(text)}`);
+  };
+
   return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black`}
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="min-h-screen bg-[#050505] text-gray-100 p-6 md:p-8 font-sans flex items-center justify-center bg-cover bg-center bg-no-repeat transition-all duration-700"
+      style={{ backgroundImage: profil.background_url ? `url(${profil.background_url})` : 'none' }}
     >
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the index.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+      {/* Background Gradient Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/70 to-transparent pointer-events-none" />
+
+      <motion.div 
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 120 }}
+        className="relative z-10 max-w-sm w-full bg-[#0a0a0a]/70 backdrop-blur-2xl rounded-[2.5rem] p-8 border border-white/5 shadow-[0_0_50px_-12px_rgba(255,255,255,0.05)]"
+      >
+        {/* Avatar */}
+        <div className="mx-auto mb-8 w-28 h-28 rounded-full border border-white/10 shadow-inner overflow-hidden flex items-center justify-center">
+            {profil.foto ? <img src={profil.foto} alt="Profil" className="w-full h-full object-cover" /> : <span className="text-gray-500 text-sm">Foto</span>}
+        </div>
+        
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-white mb-2 tracking-tight">{profil.nama || "Nama"}</h1>
+          <p className="text-sm text-gray-400 font-medium">{profil.bio || "Bio"}</p>
+        </div>
+
+        {/* Payment Box */}
+        <div className="bg-white/[0.03] p-6 rounded-2xl mb-6 border border-white/5">
+            <div className="flex justify-between items-center mb-3">
+                <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">GoPay ID</p>
+                <button 
+                    onClick={() => {navigator.clipboard.writeText(profil.gopay); alert('Nomor disalin!');}}
+                    className="text-[10px] bg-white/5 hover:bg-white/10 transition text-gray-300 px-3 py-1 rounded-full font-bold uppercase tracking-wide"
+                >
+                    Salin
+                </button>
+            </div>
+            <div className="text-2xl font-mono font-semibold text-white tracking-tight">
+                {profil.gopay}
+            </div>
+        </div>
+
+        {/* Important Instructions Box */}
+        <div className="bg-white/[0.02] border border-white/10 p-5 rounded-2xl mb-8">
+          <p className="text-[11px] font-bold text-white uppercase tracking-wider mb-2 flex items-center gap-2">
+            <span className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></span>
+            Catatan Penting
+          </p>
+          <p className="text-xs text-gray-400 leading-relaxed">
+            Lakukan pembayaran di atas, screenshot bukti, dan kirim ke konfirmasi WA.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        {/* Action Area */}
+        <div className="space-y-4">
+          <select className="w-full p-4 bg-[#111] border border-white/5 rounded-2xl text-white appearance-none focus:ring-1 focus:ring-white/20 outline-none transition-all text-sm font-medium" onChange={(e) => setPaket(e.target.value)}>
+            <option value="" className="text-gray-500">Pilih Paket Layanan</option>
+            <option value="3 Jam - 50k" className="text-white">3 Jam - 50k</option>
+            <option value="6 Jam - 100k" className="text-white">6 Jam - 100k</option>
+          </select>
+
+          <motion.button 
+            whileHover={{ scale: 1.01, backgroundColor: "#ffffff" }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleOrder} 
+            className="w-full p-4 bg-white text-black font-bold rounded-2xl transition-all duration-300 text-sm uppercase tracking-wider"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs/pages/getting-started?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            Konfirmasi Via WA
+          </motion.button>
         </div>
-      </main>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
