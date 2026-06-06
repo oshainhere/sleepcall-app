@@ -1,11 +1,5 @@
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { motion } from 'framer-motion';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-);
 
 export default function Home() {
   const [profil, setProfil] = useState({ nama: '', bio: '', wa: '', gopay: '', foto: '', background_url: '' });
@@ -13,9 +7,13 @@ export default function Home() {
 
   useEffect(() => {
     async function loadProfil() {
-      const { data, error } = await supabase.from('profil').select('*').eq('id', 1).single();
-      if (data) setProfil(data);
-      if (error) console.error("Error loading profile:", error);
+      try {
+        const response = await fetch('/api/get-profil');
+        const data = await response.json();
+        if (data) setProfil(data);
+      } catch (err) {
+        console.error("Error loading profile:", err);
+      }
     }
     loadProfil();
   }, []);
