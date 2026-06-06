@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 export default function Home() {
-  const [profil, setProfil] = useState({ nama: '', bio: '', wa: '', gopay: '', foto: '', background_url: '' });
+  const [profil, setProfil] = useState({ nama: '', bio: '', wa: '', gopay: '', foto: '', background_url: '', voice_url: '' });
   const [paket, setPaket] = useState('');
 
   useEffect(() => {
