@@ -9,6 +9,9 @@ const supabase = createClient(
     auth: {
       persistSession: false,
     },
+    global: {
+      headers: { 'x-client-info': 'sleepcall-app' },
+    },
   }
 );
 
