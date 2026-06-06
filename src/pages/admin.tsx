@@ -64,7 +64,7 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 p-6 font-sans">
+    <div className="min-h-screen bg-gray-950 text-gray-100 p-4 md:p-8 font-sans">
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}

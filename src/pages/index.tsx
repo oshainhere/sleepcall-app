@@ -28,7 +28,7 @@ export default function Home() {
     <motion.div 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-[#050505] text-gray-100 p-6 md:p-8 font-sans flex items-center justify-center bg-cover bg-center bg-no-repeat transition-all duration-700"
+      className="min-h-screen bg-[#050505] text-gray-100 p-4 md:p-8 font-sans flex items-center justify-center bg-cover bg-center bg-no-repeat transition-all duration-700"
       style={{ backgroundImage: profil.background_url ? `url(${profil.background_url})` : 'none' }}
     >
       {/* Background Gradient Overlay */}
