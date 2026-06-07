@@ -2,20 +2,18 @@ import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 
 export default function VoiceAgent() {
-  const [status, setStatus] = useState('Tekan mikrofon untuk mulai');
+  const [status, setStatus] = useState('Klik tombol untuk bicara');
   const recognition = useRef<any>(null);
-  const synth = window.speechSynthesis;
 
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
       recognition.current = new SpeechRecognition();
-      recognition.current.continuous = true; // Terus mendengar
+      recognition.current.continuous = true;
       recognition.current.interimResults = false;
       recognition.current.lang = 'id-ID';
 
       recognition.current.onresult = (event: any) => {
-        // Hentikan mendengar saat AI memproses
         recognition.current.stop();
         const text = event.results[event.results.length - 1][0].transcript;
         handleSend(text);
@@ -31,21 +29,34 @@ export default function VoiceAgent() {
       body: JSON.stringify({ message: text }),
     });
     const data = await res.json();
-    speak(data.reply);
+    playVoice(data.reply);
   };
 
-  const speak = (text: string) => {
+  const playVoice = async (text: string) => {
     setStatus('AI sedang bicara...');
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'id-ID';
+    const response = await fetch('/api/text-to-speech', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+    });
     
-    // Setelah AI selesai bicara, kembali mendengarkan
-    utterance.onend = () => {
+    if (!response.ok) {
+        const errorData = await response.json();
+        console.error('TTS Error:', errorData);
+        alert('Gagal memutar suara: ' + JSON.stringify(errorData));
+        setStatus('Error memutar suara');
+        return;
+    }
+    
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    
+    audio.onended = () => {
       setStatus('Mendengarkan...');
       recognition.current?.start();
     };
-    
-    synth.speak(utterance);
+    audio.play();
   };
 
   const startAgent = () => {
